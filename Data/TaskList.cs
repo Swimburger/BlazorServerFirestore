@@ -7,6 +7,9 @@ namespace BlazorServerFirestore.Data
     [FirestoreData]
     public class TaskList
     {
+        [FirestoreDocumentId]
+        public DocumentReference Reference { get; set; }
+
         [FirestoreProperty]
         public string Name { get; set; }
 

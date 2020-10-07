@@ -4,7 +4,9 @@
 @implements IDisposable
 @inject FirestoreDb firestoreDb
 
-<h1>Todo's</h1>
+<h1>Todo lists
+    <NavLink href=@($"/create") title="create todo list"><span class="oi oi-plus" title="edit"></span></NavLink>
+</h1>
 
 @if (taskLists.Count == 0)
 {
@@ -12,23 +14,31 @@
 }
 else
 {
-    <div class="task-lists">
+    <div class="card-columns">
     @foreach (var taskList in taskLists)
     {
-        <span>@taskList.Name</span>
-        @if(taskList.Tasks == null || taskList.Tasks.Count == 0)
-        {
-            <p>List is empty</p>
-        }
-        else
-        {
-            <ul class="task-list">
-                @foreach(var task in taskList.Tasks.OrderBy(t => t.IsDone))
+        <div class="card">
+            <div class="card-header">@taskList.Name
+                <NavLink href=@($"/edit/{taskList.Reference.Id}") class="float-right"><span class="oi oi-pencil" title="edit"></span></NavLink>
+            </div>
+            <ul class="list-group list-group-flush">
+            @if(taskList.Tasks == null || taskList.Tasks.Count == 0)
+            {
+                <li class="list-group-item">List is empty</li>
+            }
+            else
+            {
+                @foreach(var task in taskList.Tasks.Where(t => !t.IsDone))
                 {
-                    <li class="task @(task.IsDone ? "task--done" : "")">@task.Content</li>
+                    <li class="list-group-item">@task.Content</li>
                 }
+                @foreach(var task in taskList.Tasks.Where(t => t.IsDone))
+                {
+                    <li class="list-group-item"><s>@task.Content</s></li>
+                }
+            }
             </ul>
-        }
+        </div>
     }
     </div>
 }

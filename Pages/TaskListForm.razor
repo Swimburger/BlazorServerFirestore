@@ -1,0 +1,166 @@
+﻿@page "/create"
+@page "/edit/{taskListId}"
+
+@using Google.Cloud.Firestore
+@using BlazorServerFirestore.Data
+@inject FirestoreDb firestoreDb
+@inject NavigationManager navigationManager
+
+<h1>
+    @if(IsCreateForm){<text>Create todo list</text>}
+    @if(IsUpdateForm){<text>Update todo list</text>}
+</h1>
+@if(taskList != null && isLoading == false){
+    <form>
+        <div class="form-group row">
+            <label for="input-list-name" class="col-sm-2 col-form-label">List Name</label>
+            <div class="col-sm-10">
+                <input @bind="taskList.Name" class="form-control" id="input-list-name">
+            </div>
+        </div>
+        <div class="form-group row">
+            <label for="input-list-name" class="col-sm-2 col-form-label">Tasks</label>
+            <div class="col-sm-10">
+                @foreach (var task in taskList.Tasks)
+                {
+                    <div class="input-group mb-3">
+                        <div class="input-group-prepend">
+                            <div class="input-group-text">
+                                <input @bind="task.IsDone" type="checkbox" aria-label="Mark task as complete">
+                            </div>
+                        </div>
+                        <input @bind="task.Content" type="text" class="form-control" aria-label="Enter task details">
+                        <div class="input-group-append">
+                            <button 
+                                @onclick="@(() => RemoveTask(task))" 
+                                class="btn btn-outline-secondary" 
+                                type="button" 
+                                title="delete task"><span class="oi oi-trash"></span></button>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+        <div class="form-group">
+            <a href="#" @onclick="AddTask" @onclick:preventDefault><span class="oi oi-plus"></span> Add task</a>
+        </div>
+        <button 
+            type="submit" 
+            class="btn btn-primary" 
+            disabled="@isSaving"
+            @onclick="SaveTaskList" @onclick:preventDefault>
+            Save
+        </button>
+        @if(IsUpdateForm){
+            <button 
+                type="submit" 
+                class="btn btn-danger" 
+                disabled="@isSaving"
+                @onclick="DeleteTaskList" @onclick:preventDefault>
+                Delete
+            </button>
+        }
+    </form>
+} 
+else
+{
+    <p>Loading form</p>
+}
+
+@code{
+    private TaskList taskList;
+    private bool isLoading = false;
+    private bool isSaving = false;
+    private bool showSuccessMessage = false;
+
+    [Parameter]
+    public string taskListId { get; set; }
+    private bool IsCreateForm => navigationManager.ToBaseRelativePath(navigationManager.Uri).StartsWith("create", StringComparison.OrdinalIgnoreCase);
+    private bool IsUpdateForm => navigationManager.ToBaseRelativePath(navigationManager.Uri).StartsWith("edit", StringComparison.OrdinalIgnoreCase);
+
+    protected override async System.Threading.Tasks.Task OnInitializedAsync()
+    {
+        isLoading = true;
+        try
+        {
+            if (string.IsNullOrEmpty(taskListId))
+            {
+                taskList = new TaskList
+                {
+                    Name = "",
+                    Tasks = new List<BlazorServerFirestore.Task>
+                    {
+                        new BlazorServerFirestore.Task()
+                    }
+                };
+            }
+            else
+            {
+                var taskListSnapshot = await firestoreDb.Collection("taskLists")
+                    .Document(taskListId)
+                    .GetSnapshotAsync();
+    
+                taskList = taskListSnapshot.ConvertTo<TaskList>();
+            }
+        }
+        catch (Exception)
+        {
+            isLoading = false;
+        }
+        isLoading = false;
+    }
+     
+    private void AddTask()
+    {
+        taskList.Tasks.Add(new BlazorServerFirestore.Task
+        {
+            Content = "",
+            IsDone = false
+        });
+    }
+      
+      private void RemoveTask(BlazorServerFirestore.Task task)
+    {
+        taskList.Tasks.Remove(task);
+    }
+
+    private async System.Threading.Tasks.Task SaveTaskList()
+    {
+        isSaving = true;
+        try
+        {
+            var taskListCollection = firestoreDb.Collection("taskLists");
+            if (string.IsNullOrEmpty(taskListId))
+            {
+                await taskListCollection.AddAsync(taskList);
+                navigationManager.NavigateTo("/");
+            }
+            else
+            {
+                var taskListRef = taskListCollection.Document(taskListId);
+                await taskListRef.SetAsync(taskList);
+          }
+              navigationManager.NavigateTo("/");
+       }
+         catch (Exception)
+        {
+            isSaving = false;
+            throw;
+    }
+            isSaving = false;
+      }
+     
+     private async System.Threading.Tasks.Task DeleteTaskList()
+    {
+        try
+        {
+            var taskListRef = firestoreDb.Collection("taskLists").Document(taskListId);
+            await taskListRef.DeleteAsync();
+            navigationManager.NavigateTo("/");
+        }
+        catch (Exception)
+        {
+            throw;
+    }
+      }
+}
