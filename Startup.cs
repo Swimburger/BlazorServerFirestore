@@ -11,6 +11,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using BlazorServerFirestore.Data;
 using System.IO;
+using Google.Cloud.Firestore;
 
 namespace BlazorServerFirestore
 {
@@ -29,7 +30,9 @@ namespace BlazorServerFirestore
         {
             services.AddRazorPages();
             services.AddServerSideBlazor();
-            services.AddSingleton<WeatherForecastService>();
+
+            var firestoreProject = Configuration.GetValue<string>("FirestoreProject");
+            services.AddTransient<FirestoreDb>((_) => FirestoreDb.Create(firestoreProject));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -58,7 +61,7 @@ namespace BlazorServerFirestore
             });
 
             var firestoreAuthFile = Configuration.GetValue<string>("FirestoreAuthFile");
-            if(!Path.IsPathRooted(firestoreAuthFile))
+            if (!Path.IsPathRooted(firestoreAuthFile))
             {
                 firestoreAuthFile = Path.Combine(env.ContentRootPath, firestoreAuthFile);
             }
