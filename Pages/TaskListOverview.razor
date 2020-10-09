@@ -47,15 +47,18 @@ else
     private List<TaskList> taskLists = new List<TaskList>();
     private FirestoreChangeListener firestoreChangeListener;
 
-    protected override void OnInitialized()
+    protected override void OnAfterRender(bool firstRender)
     {
-        firestoreChangeListener = firestoreDb.Collection("taskLists")
-            .Listen(async (snapshot) =>
-            {
-                taskLists.Clear();
-                taskLists.AddRange(snapshot.Documents.Select(d => d.ConvertTo<TaskList>()));
-                await InvokeAsync(() => StateHasChanged());
-            });
+        if (firstRender)
+        {
+            firestoreChangeListener = firestoreDb.Collection("taskLists")
+                .Listen(async (snapshot) =>
+                {
+                    taskLists.Clear();
+                    taskLists.AddRange(snapshot.Documents.Select(d => d.ConvertTo<TaskList>()));
+                    await InvokeAsync(() => StateHasChanged());
+                });
+        }
     }
 
     public void Dispose()
