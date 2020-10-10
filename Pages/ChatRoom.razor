@@ -16,15 +16,31 @@
         </div>
     </div>
 </form>
-<ul class="list-group list-group-flush">
-    @foreach (var chatMessage in chatMessages)
-    {
-        <li class="list-group-item">@chatMessage.Message</li>
-    }
-</ul>
+@if(isLoading)
+{
+    <p>
+        Loading messages...
+    </p>
+}
+else if(chatMessages.Count == 0)
+{
+    <p>
+        No messages
+    </p>
+}
+else
+{
+    <ul class="list-group list-group-flush">
+        @foreach (var chatMessage in chatMessages)
+        {
+            <li class="list-group-item">@chatMessage.Message</li>
+        }
+    </ul>
+}
     
 
 @code {
+    private bool isLoading = true;
     private string chatMessage = "";
     private List<ChatMessage> chatMessages = new List<ChatMessage>();
     private FirestoreChangeListener firestoreChangeListener;
@@ -38,6 +54,7 @@
                 .LimitToLast(100)
                 .Listen(async (snapshot) =>
                 {
+                    isLoading = false;
                     chatMessages.Clear();
                     chatMessages.AddRange(snapshot.Documents.Select(d => d.ConvertTo<ChatMessage>()));
                     await InvokeAsync(() => StateHasChanged());

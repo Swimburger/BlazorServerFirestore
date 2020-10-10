@@ -1,11 +1,11 @@
-﻿@page "/"
+﻿@page "/tasklists"
 @using Google.Cloud.Firestore
 @using BlazorServerFirestore.Data
 @implements IDisposable
 @inject FirestoreDb firestoreDb
 
 <h1>Todo lists
-    <NavLink href=@($"/create") title="create todo list"><span class="oi oi-plus" title="edit"></span></NavLink>
+    <NavLink href=@($"/tasklists/create") title="create todo list"><span class="oi oi-plus" title="edit"></span></NavLink>
 </h1>
 
 @if (taskLists.Count == 0)
@@ -19,7 +19,7 @@ else
     {
         <div class="card">
             <div class="card-header">@taskList.Name
-                <NavLink href=@($"/edit/{taskList.Reference.Id}") class="float-right"><span class="oi oi-pencil" title="edit"></span></NavLink>
+                <NavLink href=@($"/tasklists/edit/{taskList.Reference.Id}") class="float-right"><span class="oi oi-pencil" title="edit"></span></NavLink>
             </div>
             <ul class="list-group list-group-flush">
             @if(taskList.Tasks == null || taskList.Tasks.Count == 0)

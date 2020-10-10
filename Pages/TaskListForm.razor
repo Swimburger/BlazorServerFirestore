@@ -1,5 +1,5 @@
-﻿@page "/create"
-@page "/edit/{taskListId}"
+﻿@page "/tasklists/create"
+@page "/tasklists/edit/{taskListId}"
 
 @using Google.Cloud.Firestore
 @using BlazorServerFirestore.Data
@@ -71,7 +71,6 @@ else
     private TaskList taskList;
     private bool isLoading = false;
     private bool isSaving = false;
-    private bool showSuccessMessage = false;
 
     [Parameter]
     public string taskListId { get; set; }
@@ -133,14 +132,13 @@ else
             if (string.IsNullOrEmpty(taskListId))
             {
                 await taskListCollection.AddAsync(taskList);
-                navigationManager.NavigateTo("/");
             }
             else
             {
                 var taskListRef = taskListCollection.Document(taskListId);
                 await taskListRef.SetAsync(taskList);
             }
-            navigationManager.NavigateTo("/");
+            navigationManager.NavigateTo("/tasklists");
         }
         catch (Exception)
         {
@@ -156,7 +154,7 @@ else
         {
             var taskListRef = firestoreDb.Collection("taskLists").Document(taskListId);
             await taskListRef.DeleteAsync();
-            navigationManager.NavigateTo("/");
+            navigationManager.NavigateTo("/tasklists");
         }
         catch (Exception)
         {
