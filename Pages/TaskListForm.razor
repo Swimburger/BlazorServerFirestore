@@ -89,9 +89,9 @@ else
                 {
                     Name = "",
                     Tasks = new List<BlazorServerFirestore.Task>
-                    {
-                        new BlazorServerFirestore.Task()
-                    }
+                {
+                    new BlazorServerFirestore.Task()
+                }
                 };
             }
             else
@@ -99,7 +99,7 @@ else
                 var taskListSnapshot = await firestoreDb.Collection("taskLists")
                     .Document(taskListId)
                     .GetSnapshotAsync();
-    
+
                 taskList = taskListSnapshot.ConvertTo<TaskList>();
             }
         }
@@ -109,7 +109,7 @@ else
         }
         isLoading = false;
     }
-     
+
     private void AddTask()
     {
         taskList.Tasks.Add(new BlazorServerFirestore.Task
@@ -118,8 +118,8 @@ else
             IsDone = false
         });
     }
-      
-      private void RemoveTask(BlazorServerFirestore.Task task)
+
+    private void RemoveTask(BlazorServerFirestore.Task task)
     {
         taskList.Tasks.Remove(task);
     }
@@ -139,18 +139,18 @@ else
             {
                 var taskListRef = taskListCollection.Document(taskListId);
                 await taskListRef.SetAsync(taskList);
-          }
-              navigationManager.NavigateTo("/");
-       }
-         catch (Exception)
+            }
+            navigationManager.NavigateTo("/");
+        }
+        catch (Exception)
         {
             isSaving = false;
             throw;
+        }
+        isSaving = false;
     }
-            isSaving = false;
-      }
-     
-     private async System.Threading.Tasks.Task DeleteTaskList()
+
+    private async System.Threading.Tasks.Task DeleteTaskList()
     {
         try
         {
@@ -161,6 +161,6 @@ else
         catch (Exception)
         {
             throw;
+        }
     }
-      }
 }

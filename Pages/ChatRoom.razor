@@ -1,0 +1,65 @@
+﻿@page "/chatroom"
+@using Google.Cloud.Firestore
+@using BlazorServerFirestore.Data
+@implements IDisposable
+@inject FirestoreDb firestoreDb
+
+<h1>Chat room</h1>
+
+<form @onsubmit="SendMessage" @onsubmit:preventDefault>
+    <div class="form-group">
+        <div class="input-group mb-3">
+            <input @bind="chatMessage" @bind:event="oninput" class="form-control" placeholder="Enter message" aria-label="Chat message">
+            <div class="input-group-append">
+                <button class="btn btn-outline-secondary" type="submit" disabled="@(string.IsNullOrEmpty(chatMessage))">Send</button>
+            </div>
+        </div>
+    </div>
+</form>
+<ul class="list-group list-group-flush">
+    @foreach (var chatMessage in chatMessages)
+    {
+        <li class="list-group-item">@chatMessage.Message</li>
+    }
+</ul>
+    
+
+@code {
+    private string chatMessage = "";
+    private List<ChatMessage> chatMessages = new List<ChatMessage>();
+    private FirestoreChangeListener firestoreChangeListener;
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender)
+        {
+            firestoreChangeListener = firestoreDb.Collection("chatMessages")
+                .OrderByDescending("CreatedAt")
+                .LimitToLast(100)
+                .Listen(async (snapshot) =>
+                {
+                    chatMessages.Clear();
+                    chatMessages.AddRange(snapshot.Documents.Select(d => d.ConvertTo<ChatMessage>()));
+                    await InvokeAsync(() => StateHasChanged());
+                });
+        }
+    }
+
+    public async void SendMessage(EventArgs e)
+    {
+        if(string.IsNullOrEmpty(chatMessage)){
+            return;
+        }
+
+        await firestoreDb.Collection("chatMessages").AddAsync(new ChatMessage{
+            Message = chatMessage
+        });
+        chatMessage = "";
+        StateHasChanged();
+    }
+
+    public void Dispose()
+    {
+        firestoreChangeListener?.StopAsync();
+    }
+}
