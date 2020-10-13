@@ -1,0 +1,80 @@
+﻿@page "/"
+@using Google.Cloud.Firestore
+@implements IDisposable
+
+<h1>Chat room</h1>
+
+<form @onsubmit="SendMessage" @onsubmit:preventDefault>
+    <input @bind="message" @bind:event="oninput" placeholder="Enter message">
+    <button type="submit" disabled="@(string.IsNullOrEmpty(message))">Send</button>
+</form>
+<ul>
+    @foreach (var chatMessage in chatMessages)
+    {
+        <li>@chatMessage.Message</li>
+    }
+</ul>
+
+@code {
+    private string message = "";
+    private List<ChatMessage> chatMessages = new List<ChatMessage>();
+    private FirestoreChangeListener firestoreChangeListener;
+
+    private async Task<FirestoreDb> CreateFirestoreDbAsync()
+    {
+        var projectName = "blazor-sample";
+        var authFilePath = "secrets\\blazor-sample-auth.json";
+        // environment variable could be configured differently, but for the sample simply hardcode it
+        // the Firestore library expects this environment variable to be set
+        Environment.SetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS", authFilePath);
+        return await FirestoreDb.CreateAsync(projectName);
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            var firestoreDb = await CreateFirestoreDbAsync();
+            firestoreChangeListener = firestoreDb.Collection("chatMessages")
+                .OrderByDescending("CreatedAt")
+                .LimitToLast(100)
+                .Listen(async (snapshot) =>
+                {
+                    chatMessages.Clear();
+                    chatMessages.AddRange(snapshot.Documents.Select(d => d.ConvertTo<ChatMessage>()));
+                    await InvokeAsync(() => StateHasChanged());
+                });
+        }
+    }
+
+    private async void SendMessage(EventArgs e)
+    {
+        if(string.IsNullOrEmpty(message)){
+            return;
+        }
+
+        var firestoreDb = await CreateFirestoreDbAsync();
+        await firestoreDb.Collection("chatMessages").AddAsync(new ChatMessage{
+            Message = message
+        });
+        message = "";
+        StateHasChanged();
+    }
+
+    public void Dispose()
+    {
+        // if the blazor component is pre-rendered, "OnAfterRender" is never called and the "firestoreChangeListener" will be null
+        // therefore we need to make sure to check for null with '?'
+        firestoreChangeListener?.StopAsync();
+    }
+
+    [FirestoreData]
+    public class ChatMessage
+    {
+        [FirestoreProperty]
+        public string Message { get; set; }
+
+        [FirestoreProperty, ServerTimestamp]
+        public Timestamp CreatedAt { get; set; }
+    }
+}
