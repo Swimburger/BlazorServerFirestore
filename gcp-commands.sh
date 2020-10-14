@@ -1,5 +1,5 @@
 #!/bin/bash
-# PROJECT_ID-variable will be set to a concatenation of "blazor-sample-" and your username to ensure the ID is unique accross accounts
+# PROJECT_ID-variable will be set to a concatenation of "blazor-sample-" and your username to ensure the ID is unique across accounts
 PROJECT_ID="blazor-sample-$USER"
 SERVICE_ACCOUNT="blazor-sample-service-account"
 AUTH_FILE="blazor-sample-auth.json"
