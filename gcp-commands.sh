@@ -3,6 +3,7 @@
 PROJECT_ID="blazor-sample-$USER"
 SERVICE_ACCOUNT="blazor-sample-service-account"
 AUTH_FILE="blazor-sample-auth.json"
+# available regions can be listed using `gcloud app regions list`
 REGION="us-east1"
 
 # create a project to hold cloud resources
