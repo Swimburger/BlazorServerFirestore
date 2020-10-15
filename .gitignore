@@ -433,4 +433,6 @@ $RECYCLE.BIN/
 !.vscode/extensions.json
 
 BlazorFirestoreSamples/secrets/*
+BlazorFirestoreMinimal/secrets/*
 !BlazorFirestoreSamples/secrets/.gitkeep
+!BlazorFirestoreMinimal/secrets/.gitkeep
